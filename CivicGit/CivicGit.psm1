@@ -16,7 +16,6 @@ function New-ShaBranch
     Write-Host $newName
 }
 
-
 function Update-Branch
 {
     [CmdletBinding()]
@@ -25,7 +24,10 @@ function Update-Branch
         [String]$Branch = 'qa'
     )
     $cur = Invoke-Command -ScriptBlock { git symbolic-ref --short HEAD }
-    Invoke-Command -ScriptBlock { git checkout $Branch } -ErrorAction Stop
+    Write-Host ('checkout ' + $Branch)
+    Invoke-Command -ScriptBlock{ git checkout $Branch } -ErrorAction Stop
+    Write-Host ('pull ' + $Branch)
     Invoke-Command -ScriptBlock { git pull --ff-only } -ErrorAction Stop
+    Write-Host ('checkout ' + $cur)
     Invoke-Command -ScriptBlock { git checkout $cur } -ErrorAction Stop
 }
