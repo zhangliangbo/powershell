@@ -31,3 +31,14 @@ function Update-Branch
     Write-Host ('checkout ' + $cur)
     Invoke-Command -ScriptBlock { git checkout $cur } -ErrorAction Stop
 }
+
+function Remove-LocalBranch
+{
+    [CmdletBinding()]
+    param (
+        [ValidateNotNullOrEmpty()]
+        [String]$Branch
+    )
+    $list = Invoke-Command -ScriptBlock { git branch --list $Branch } -ErrorAction Stop
+    Write-Host ('branch list is ' + $list)
+}
