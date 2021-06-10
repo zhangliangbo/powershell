@@ -16,6 +16,35 @@ function New-ShaBranch
     Write-Host $newName
 }
 
+function New-HotfixBranch
+{
+    [CmdletBinding()]
+    param(
+        [ValidateNotNullOrEmpty()]
+        [String]$Branch = 'master',
+        [Boolean]$Push = $true
+    )
+    Write-Host ('>checkout ' + $Branch)
+    Invoke-Command -ScriptBlock{ git checkout $Branch } -ErrorAction Stop
+
+    $branch = Invoke-Command -ScriptBlock { git symbolic-ref --short head }
+    $sha1 = Invoke-Command -ScriptBlock { git rev-parse --short head }
+    $newName = 'hotfix-' + $branch + '-' + $sha1 + '-' + (Get-Date -Format 'yyyyMMdd')
+
+    Write-Host ('>pull ' + $branch)
+    Invoke-Command -ScriptBlock { git pull --ff-only } -ErrorAction Stop
+
+    Write-Host ('>create and checkout ' + $newName)
+    Invoke-Command -ScriptBlock { git checkout -b $newName } -ErrorAction Stop
+
+    if ($Push)
+    {
+        Invoke-Command -ScriptBlock { git push --set-upstream origin $newName } -ErrorAction Stop
+    }
+
+    Write-Host $newName
+}
+
 function Update-Branch
 {
     [CmdletBinding()]
