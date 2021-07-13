@@ -1,3 +1,30 @@
+# 创建子分支
+function New-SubBranch
+{
+    [CmdletBinding()]
+    param(
+        [ValidateNotNullOrEmpty()]
+        [String[]]$SubName = @('master', 'qa'),
+        [Boolean]$Push = $true
+    )
+    $branch = Invoke-Command -ScriptBlock { git symbolic-ref --short head }
+    for($i = 0; $i -lt $SubName.Length; $i++){
+        $sub = $SubName.Get($i)
+        $newName = $branch + '-' + $sub
+        Write-Host $newName
+        Invoke-Command -ScriptBlock { git branch $newName } -ErrorAction Stop
+        if ($Push)
+        {
+            Invoke-Command -ScriptBlock { git push --set-upstream origin $newName } -ErrorAction Stop
+        }
+        if ($i -eq 0)
+        {
+            Write-Host ('checkout ' + $newName)
+            Invoke-Command -ScriptBlock { git checkout $newName } -ErrorAction Stop
+        }
+    }
+}
+
 function New-ShaBranch
 {
     [CmdletBinding()]
