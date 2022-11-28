@@ -4,13 +4,16 @@ function New-SubBranch
     [CmdletBinding()]
     param(
         [ValidateNotNullOrEmpty()]
+        [String]$FromBranch = 'master',
         [String[]]$SubName = @('master', 'qa'),
         [Boolean]$Push = $true
     )
+    Invoke-Command -ScriptBlock { git checkout $FromBranch } -ErrorAction Stop
+    Invoke-Command -ScriptBlock { git pull --ff-only } -ErrorAction Stop
     $branch = Invoke-Command -ScriptBlock { git symbolic-ref --short head }
     for($i = 0; $i -lt $SubName.Length; $i++){
         $sub = $SubName.Get($i)
-        $newName = $branch + '-' + $sub
+        $newName = $branch + '-to-' + $sub + '-' + (Get-Date -Format 'yyyyMMddHHmmss')
         Write-Host $newName
         Invoke-Command -ScriptBlock { git branch $newName } -ErrorAction Stop
         if ($Push)
@@ -49,17 +52,19 @@ function New-HotfixBranch
     param(
         [ValidateNotNullOrEmpty()]
         [String]$Branch = 'master',
-        [Boolean]$Push = $true
+        [Boolean]$Push = $true,
+        [String]$Tag = ''
     )
     Write-Host ('>checkout ' + $Branch)
     Invoke-Command -ScriptBlock{ git checkout $Branch } -ErrorAction Stop
 
     $branch = Invoke-Command -ScriptBlock { git symbolic-ref --short head }
-    $sha1 = Invoke-Command -ScriptBlock { git rev-parse --short head }
-    $newName = 'hotfix-' + $branch + '-' + $sha1 + '-' + (Get-Date -Format 'yyyyMMdd')
 
     Write-Host ('>pull ' + $branch)
     Invoke-Command -ScriptBlock { git pull --ff-only } -ErrorAction Stop
+
+    $sha1 = Invoke-Command -ScriptBlock { git rev-parse --short head }
+    $newName = 'hotfix-' + $branch + '-' + $sha1 + '-' + (Get-Date -Format 'yyyyMMdd') + '-' + $Tag
 
     Write-Host ('>create and checkout ' + $newName)
     Invoke-Command -ScriptBlock { git checkout -b $newName } -ErrorAction Stop
